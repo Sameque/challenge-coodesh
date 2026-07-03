@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="QuickFIXn.FIX44" Version="1.14.1" />
+    <ProjectReference Include="..\OrderAccumulator.Application\OrderAccumulator.Application.csproj" />
+    <ProjectReference Include="..\OrderAccumulator.Infrastructure\OrderAccumulator.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>
