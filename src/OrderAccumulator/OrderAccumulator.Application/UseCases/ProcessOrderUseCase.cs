@@ -20,9 +20,11 @@ public class ProcessOrderUseCase
     {
         // Simple validation
         if (string.IsNullOrWhiteSpace(request.Symbol) || request.Quantity <= 0 || request.Price <= 0)
-        {
             return new OrderResponse(false, "Invalid order parameters.");
-        }
+
+        //validar se o price é maior que  1000
+        if (request.Price > 1000)
+            return new OrderResponse(false, $"Price exceeds the maximum allowed value of 1000.");
 
         var side = request.Side.ToLower() == "buy" ? OrderSide.Buy : OrderSide.Sell;
 
