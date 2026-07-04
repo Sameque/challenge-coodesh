@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using OrderGenerator.Domain.Interfaces;
 using OrderGenerator.Infrastructure.Exchange;
 using OrderGenerator.Infrastructure.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace OrderGenerator.Infrastructure.Extensions;
 

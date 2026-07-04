@@ -1,7 +1,12 @@
 using OrderGenerator.API.Middleware;
 using OrderGenerator.Application.UseCases;
 using OrderGenerator.Infrastructure.Configuration;
+using OrderGenerator.Infrastructure.Exchange;
 using OrderGenerator.Infrastructure.Extensions;
+using QuickFix;
+using QuickFix.Logger;
+using QuickFix.Store;
+using QuickFix.Transport;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -37,6 +42,24 @@ builder.Services.AddSwaggerGen(options =>
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     if (File.Exists(xmlPath))
         options.IncludeXmlComments(xmlPath);
+});
+
+var settings = new SessionSettings("initiator.cfg");
+var application = new FixApplication();
+var storeFactory = new FileStoreFactory(settings);
+var logFactory = new FileLogFactory(settings);
+
+var initiator = new SocketInitiator(
+    application,
+    storeFactory,
+    settings,
+    logFactory);
+
+initiator.Start();
+
+builder.Services.AddSingleton((a) =>
+{
+    return application;
 });
 
 var app = builder.Build();

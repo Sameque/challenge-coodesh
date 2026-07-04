@@ -4,6 +4,6 @@ namespace OrderGenerator.Application.DTOs;
 /// Represents the financial exposure of a single symbol.
 /// </summary>
 public sealed record ExposureResponse(
-    string Symbol,
+    string Ticker,
     decimal ValueExposed
 );

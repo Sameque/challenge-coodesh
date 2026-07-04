@@ -19,6 +19,11 @@ public sealed class GetSymbolsUseCase
     public async Task<IReadOnlyList<SymbolResponse>> ExecuteAsync(
         CancellationToken cancellationToken = default)
     {
-        return await _exchangeApiClient.GetSymbolsAsync(cancellationToken);
+        var symbols =  await _exchangeApiClient.GetSymbolsAsync(cancellationToken);
+
+        return symbols
+                .Select(s => new SymbolResponse(s.Ticker, s.Description))
+                .ToList().AsReadOnly();
+
     }
 }

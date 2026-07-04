@@ -25,8 +25,8 @@ public sealed class PlaceOrderUseCase
     }
 
     public async Task<PlaceOrderResponse> ExecuteAsync(
-        PlaceOrderRequest request,
-        CancellationToken cancellationToken = default)
+                        PlaceOrderRequest request,
+                        CancellationToken cancellationToken = default)
     {
         bool symbolExists = await _exchangeApiClient.SymbolExistsAsync(request.Symbol, cancellationToken);
         if (!symbolExists)

@@ -21,6 +21,9 @@ public sealed class GetExposureUseCase
     public async Task<IReadOnlyList<ExposureResponse>> ExecuteAsync(
         CancellationToken cancellationToken = default)
     {
-        return await _exchangeApiClient.GetExposureAsync(cancellationToken);
+        var exposers =  await _exchangeApiClient.GetExposureAsync(cancellationToken);
+        return exposers
+                .Select(e => new ExposureResponse(e.Ticker, e.ValueExposed))
+                .ToList().AsReadOnly();
     }
 }
