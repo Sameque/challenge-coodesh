@@ -12,7 +12,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<OrderAccumulatorDbContext>(options =>
     options.UseSqlite("Data Source=orders.db"));
 
-// Persistence
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<IExposureRepository, ExposureRepository>();
+
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 
 builder.Services.AddScoped<ProcessOrderUseCase>();
@@ -41,7 +43,7 @@ using (var scope = app.Services.CreateScope())
 app.MapGet("/api/symbols", async (GetSymbolsUseCase useCase) =>
     Results.Ok(await useCase.ExecuteAsync()));
 
-app.MapGet("/api/exposed", async (GetExposureUseCase useCase) =>
+app.MapGet("/api/exposure", async (GetExposureUseCase useCase) =>
     Results.Ok(await useCase.ExecuteAsync()));
 
 var fixAcceptor = app.Services.GetRequiredService<FixAcceptor>();
