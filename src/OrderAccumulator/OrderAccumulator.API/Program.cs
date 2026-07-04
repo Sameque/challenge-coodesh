@@ -4,6 +4,8 @@ using OrderAccumulator.Domain.Interfaces;
 using OrderAccumulator.Infrastructure.Persistence;
 using OrderAccumulator.API.Fix;
 using QuickFix;
+using QuickFix.Store;
+using QuickFix.Logger;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,8 +54,13 @@ var fixAcceptor = app.Services.GetRequiredService<FixAcceptor>();
 var settings = new SessionSettings("config/client.cfg");
 var storeFactory = new FileStoreFactory(settings);
 var logFactory = new ScreenLogFactory(settings);
-var initiator = new Acceptor(fixAcceptor, storeFactory, settings, logFactory);
 
-Task.Run(() => initiator.Start());
+var initiator = new ThreadedSocketAcceptor(
+                        fixAcceptor, 
+                        storeFactory, 
+                        settings, 
+                        logFactory);
+
+initiator.Start();
 
 app.Run();
