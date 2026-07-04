@@ -9,24 +9,20 @@ using QuickFix.Logger;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// DB Context
 builder.Services.AddDbContext<OrderAccumulatorDbContext>(options =>
     options.UseSqlite("Data Source=orders.db"));
 
 // Persistence
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 
-// Use Cases
 builder.Services.AddScoped<ProcessOrderUseCase>();
 builder.Services.AddScoped<GetSymbolsUseCase>();
 builder.Services.AddScoped<GetExposureUseCase>();
 
-// FIX Acceptor
 builder.Services.AddSingleton<FixAcceptor>();
 
 var app = builder.Build();
 
-// Seed Symbols
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<OrderAccumulatorDbContext>();
@@ -42,14 +38,12 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// Endpoints
 app.MapGet("/api/symbols", async (GetSymbolsUseCase useCase) =>
     Results.Ok(await useCase.ExecuteAsync()));
 
 app.MapGet("/api/exposed", async (GetExposureUseCase useCase) =>
     Results.Ok(await useCase.ExecuteAsync()));
 
-// Start FIX Acceptor in background
 var fixAcceptor = app.Services.GetRequiredService<FixAcceptor>();
 var settings = new SessionSettings("config/client.cfg");
 var storeFactory = new FileStoreFactory(settings);
