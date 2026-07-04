@@ -22,10 +22,6 @@ public class Order
 
     public static Order Create(string symbol, OrderSide side, int quantity, decimal price)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(symbol);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(quantity);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(price);
-
         return new Order
         {
             Id = Guid.NewGuid(),

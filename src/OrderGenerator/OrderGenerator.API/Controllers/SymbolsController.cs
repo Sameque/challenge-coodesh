@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using OrderGenerator.Application.DTOs;
 using OrderGenerator.Application.UseCases;
+using OrderGenerator.Domain.DTOs;
 
 namespace OrderGenerator.API.Controllers;
 

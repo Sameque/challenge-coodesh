@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using OrderGenerator.Application.DTOs;
 using OrderGenerator.Application.UseCases;
+using OrderGenerator.Domain.DTOs;
 
 namespace OrderGenerator.API.Controllers;
 
@@ -39,10 +39,11 @@ public sealed class OrderController : ControllerBase
         CancellationToken cancellationToken)
     {
         _logger.LogInformation(
-            "Received order request. Symbol={Symbol} Side={Side} Qty={Qty} Price={Price}",
-            request.Symbol, request.Side, request.Quantity, request.Price);
+            "Received order request. Ticker={Ticker} Side={Side} Qty={Qty} Price={Price}",
+            request.Ticker, request.Side, request.Quantity, request.Price);
 
         var response = await _placeOrderUseCase.ExecuteAsync(request, cancellationToken);
+
         return CreatedAtAction(nameof(PlaceOrder), new { id = response.OrderId }, response);
     }
 }

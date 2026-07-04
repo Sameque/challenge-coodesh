@@ -2,7 +2,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\OrderGenerator.Domain\OrderGenerator.Domain.csproj" />
-    <ProjectReference Include="..\OrderGenerator.Application\OrderGenerator.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>
