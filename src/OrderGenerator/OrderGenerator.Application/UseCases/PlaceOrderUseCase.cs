@@ -1,6 +1,6 @@
-using OrderGenerator.Application.DTOs;
+using OrderGenerator.Domain.DTOs;
 using OrderGenerator.Domain.Entities;
-using OrderGenerator.Domain.Interfaces;
+using OrderGenerator.Infrastructure.Exchange;
 
 namespace OrderGenerator.Application.UseCases;
 
@@ -11,30 +11,25 @@ namespace OrderGenerator.Application.UseCases;
 /// </summary>
 public sealed class PlaceOrderUseCase
 {
-    private readonly IExchangeApiClient _exchangeApiClient;
-    private readonly IExchangeService _exchangeService;
+    private readonly FixApplication _fixApplication;
 
-    public PlaceOrderUseCase(
-        IExchangeApiClient exchangeApiClient,
-        IExchangeService exchangeService)
+    public PlaceOrderUseCase(FixApplication fixApplication)
     {
-        _exchangeApiClient = exchangeApiClient ??
-            throw new ArgumentNullException(nameof(exchangeApiClient));
-        _exchangeService = exchangeService ??
-            throw new ArgumentNullException(nameof(exchangeService));
+        _fixApplication = fixApplication 
+                            ?? throw new ArgumentNullException(nameof(fixApplication));
     }
 
     public async Task<PlaceOrderResponse> ExecuteAsync(
                         PlaceOrderRequest request,
                         CancellationToken cancellationToken = default)
     {
-        bool symbolExists = await _exchangeApiClient.SymbolExistsAsync(request.Symbol, cancellationToken);
-        if (!symbolExists)
-            throw new InvalidOperationException($"Symbol '{request.Symbol}' is not available for trading.");
+        var order = Order.Create(request.Ticker, request.Side, request.Quantity, request.Price);
 
-        var order = Order.Create(request.Symbol, request.Side, request.Quantity, request.Price);
+        //TODO: inserir ordem no banco de dados
 
-        var updatedOrder = await _exchangeService.SendOrderAsync(order, cancellationToken);
+        var updatedOrder = await _fixApplication.SendOrder(order);
+
+        //TODO atualizar ordem
 
         return MapToResponse(updatedOrder);
     }
@@ -42,7 +37,7 @@ public sealed class PlaceOrderUseCase
     private static PlaceOrderResponse MapToResponse(Order order) =>
         new(
             order.Id,
-            order.Symbol,
+            order.Ticker,
             order.Side,
             order.Quantity,
             order.Price,

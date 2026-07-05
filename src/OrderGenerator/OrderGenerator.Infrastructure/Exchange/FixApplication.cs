@@ -1,8 +1,7 @@
-using OrderGenerator.Application.DTOs;
 using OrderGenerator.Domain.Entities;
 using OrderGenerator.Domain.Enums;
 using QuickFix;
-using QuickFix.FIX44;
+using System.Collections.Concurrent;
 
 namespace OrderGenerator.Infrastructure.Exchange;
 
@@ -11,25 +10,26 @@ public class FixApplication : MessageCracker, IApplication
     public bool Connected => _session is not null;
 
     private Session? _session;
+    private readonly ConcurrentDictionary<Guid, (Order Order, TaskCompletionSource<Order> Tcs)> _pendingOrders = new();
 
     public FixApplication()
     {
         _session = null;
     }
 
-    public void SendOrder(PlaceOrderRequest order)
+    public async Task<Order> SendOrder(Order order)
     {
-        Console.WriteLine($"[SendOrder]");
+        Console.WriteLine($"[SendOrder] Sending order {order.Id}");
 
         if (_session == null)
-        {
-            Console.WriteLine("Session is not established.");
-            return;
-        }
+            throw new InvalidOperationException("FIX session is not established.");
+
+        var tcs = new TaskCompletionSource<Order>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _pendingOrders[order.Id] = (order, tcs);
 
         var newOrderSingle = new QuickFix.FIX44.NewOrderSingle(
-            new QuickFix.Fields.ClOrdID(Guid.NewGuid().ToString("N")),
-            new QuickFix.Fields.Symbol(order.Symbol),
+            new QuickFix.Fields.ClOrdID(order.Id.ToString()),
+            new QuickFix.Fields.Symbol(order.Ticker),
             new QuickFix.Fields.Side(order.Side == OrderSide.BUY ? QuickFix.Fields.Side.BUY : QuickFix.Fields.Side.SELL),
             new QuickFix.Fields.TransactTime(DateTime.UtcNow),
             new QuickFix.Fields.OrdType(QuickFix.Fields.OrdType.LIMIT));
@@ -38,6 +38,18 @@ public class FixApplication : MessageCracker, IApplication
         newOrderSingle.Set(new QuickFix.Fields.Price(order.Price));
 
         _session.Send(newOrderSingle);
+
+        var timeoutTask = Task.Delay(TimeSpan.FromSeconds(30));
+        var completedTask = await Task.WhenAny(tcs.Task, timeoutTask);
+
+        if (completedTask == timeoutTask)
+        {
+            _pendingOrders.TryRemove(order.Id, out _);
+            order.Reject("Exchange response timeout");
+            return order;
+        }
+
+        return await tcs.Task;
     }
 
     public void OnCreate(SessionID sessionId)
@@ -68,7 +80,7 @@ public class FixApplication : MessageCracker, IApplication
         Console.WriteLine($"[{direction}]");
 
         var message = fixMessage.ToString();
-        var fields = message.Split('\u0001', StringSplitOptions.RemoveEmptyEntries);
+        var fields = message.Split('', StringSplitOptions.RemoveEmptyEntries);
 
         foreach (var field in fields)
         {
@@ -113,6 +125,17 @@ public class FixApplication : MessageCracker, IApplication
             ["4"] = "Canceled",
             ["8"] = "Rejected"
         },
+        [103] = new()
+        {
+            ["0"] = "Broker option",
+            ["1"] = "Unknown symbol",
+            ["2"] = "Exchange closed",
+            ["3"] = "Order exceeds limit",
+            ["4"] = "Too late to enter",
+            ["5"] = "Unknown order",
+            ["6"] = "Duplicate order",
+            ["99"] = "Other"
+        },
         [123] = new()
         {
             ["Y"] = "Yes",
@@ -151,6 +174,7 @@ public class FixApplication : MessageCracker, IApplication
                                             { 54, "Side" },
                                             { 55, "Symbol" },
                                             { 56, "TargetCompID" },
+                                            { 60, "TransactTime" },
                                             { 58,  "Text" },
                                             { 98, "EncryptMethod" },
                                             { 103, "OrdRejReason" },
@@ -164,7 +188,34 @@ public class FixApplication : MessageCracker, IApplication
     public void OnMessage(
         QuickFix.FIX44.ExecutionReport report,
         SessionID sessionId)
-            //TODO: processar pagamento 
-            => PrintMessage("EXECUTION REPORT", report);
+    {
+        PrintMessage("EXECUTION REPORT", report);
 
+        string clOrdIdStr = report.ClOrdID.Value;
+        if (Guid.TryParse(clOrdIdStr, out Guid orderId))
+        {
+            if (_pendingOrders.TryRemove(orderId, out var pending))
+            {
+                var order = pending.Order;
+                var tcs = pending.Tcs;
+
+                var status = report.OrdStatus.Value;
+                if (status == QuickFix.Fields.OrdStatus.REJECTED)
+                {
+                    string reason = report.OrdRejReason.Value.ToString();
+                    order.Reject(reason);
+                }
+                else if (status == QuickFix.Fields.OrdStatus.NEW || status == QuickFix.Fields.OrdStatus.FILLED)
+                {
+                    order.Accept(report.OrderID.Value);
+                }
+                else
+                {
+                    order.Accept(report.OrderID.Value);
+                }
+
+                tcs.TrySetResult(order);
+            }
+        }
+    }
 }
