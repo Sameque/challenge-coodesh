@@ -2,6 +2,8 @@ using OrderGenerator.API.Middleware;
 using OrderGenerator.Application.UseCases;
 using OrderGenerator.Infrastructure.Configuration;
 using OrderGenerator.Infrastructure.Exchange;
+using OrderGenerator.Infrastructure.Extensions;
+using OrderGenerator.Infrastructure.Persistence;
 using QuickFix;
 using QuickFix.Logger;
 using QuickFix.Store;
@@ -12,6 +14,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.Configure<ExchangeSettings>(
     builder.Configuration.GetSection(ExchangeSettings.SectionName));
+
+builder.Services.AddInfrastructure();
 
 builder.Services.AddScoped<PlaceOrderUseCase>();
 builder.Services.AddScoped<GetSymbolsUseCase>();
@@ -59,6 +63,12 @@ builder.Services.AddSingleton((a) =>
 });
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<OrderDbContext>();
+    dbContext.Database.EnsureCreated();
+}
 
 app.UseMiddleware<GlobalExceptionMiddleware>();
 

@@ -20,19 +20,21 @@ public class Order
 
     private Order() { Ticker = string.Empty; }
 
-    public static Order Create(string symbol, OrderSide side, int quantity, decimal price)
-    {
-        return new Order
-        {
-            Id = Guid.NewGuid(),
-            Ticker = symbol.ToUpperInvariant(),
-            Side = side,
-            Quantity = quantity,
-            Price = price,
-            Status = OrderStatus.Pending,
-            CreatedAt = DateTime.UtcNow
-        };
-    }
+    public static Order Create(
+                        string symbol, 
+                        OrderSide side, 
+                        int quantity, 
+                        decimal price)
+                            => new()
+                                {
+                                    Id = Guid.NewGuid(),
+                                    Ticker = symbol.ToUpperInvariant(),
+                                    Side = side,
+                                    Quantity = quantity,
+                                    Price = price,
+                                    Status = OrderStatus.Pending,
+                                    CreatedAt = DateTime.UtcNow
+                                };
 
     public void Accept(string exchangeOrderId)
     {
