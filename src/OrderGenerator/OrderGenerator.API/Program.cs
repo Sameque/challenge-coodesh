@@ -18,7 +18,6 @@ builder.Services.Configure<ExchangeSettings>(
 builder.Services.AddInfrastructure();
 
 builder.Services.AddScoped<PlaceOrderUseCase>();
-builder.Services.AddScoped<GetSymbolsUseCase>();
 
 builder.Services
     .AddControllers()
