@@ -7,9 +7,9 @@ import { Asset } from '../models/asset.model';
 })
 export class AssetService {
   private mockAssets: Asset[] = [
-    { symbol: 'PETR4', name: 'Petrobras' },
-    { symbol: 'VALE3', name: 'Vale' },
-    { symbol: 'VIIA4', name: 'Via' }
+    { ticker: 'PETR4', name: 'Petrobras' },
+    { ticker: 'VALE3', name: 'Vale' },
+    { ticker: 'VIIA4', name: 'Via' }
   ];
 
   getAssets(): Observable<Asset[]> {

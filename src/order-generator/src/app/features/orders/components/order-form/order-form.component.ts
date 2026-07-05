@@ -26,8 +26,8 @@ export class OrderFormComponent implements OnInit {
     private assetService: AssetService
   ) {
     this.orderForm = this.fb.group({
-      symbol: ['', [Validators.required]],
-      side: ['Compra', [Validators.required]],
+      ticker: ['', [Validators.required]],
+      side: ['BUY', [Validators.required]],
       quantity: [null, [
         Validators.required,
         Validators.min(1),
@@ -75,12 +75,12 @@ export class OrderFormComponent implements OnInit {
     this.orderService.sendOrder(orderData).subscribe({
       next: (res) => {
         this.isLoading.set(false);
-        if (res.success) {
+        if (res.status === 'Accepted') {
           this.feedbackMessage.set({ text: 'Ordem Aceita', type: 'success' });
-          this.orderForm.reset({ side: 'Compra' });
+          this.orderForm.reset({ side: 'BUY' });
         } else {
           this.feedbackMessage.set({
-            text: `Ordem Rejeitada: ${res.errorReason || 'Erro desconhecido'}`,
+            text: `Ordem Rejeitada: ${res.rejectReason || 'Erro desconhecido'}`,
             type: 'error'
           });
         }

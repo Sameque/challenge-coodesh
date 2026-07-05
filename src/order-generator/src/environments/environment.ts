@@ -1,4 +1,4 @@
 export const environment = {
   production: false,
-  urlBase: 'https://localhost:5000'
+  urlBase: 'http://localhost:5159'
 };

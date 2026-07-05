@@ -1,4 +1,4 @@
 export interface Asset {
-  symbol: string;
+  ticker: string;
   name: string;
 }

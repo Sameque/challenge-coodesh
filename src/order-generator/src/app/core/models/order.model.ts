@@ -1,13 +1,13 @@
 export interface Order {
-  symbol: string;
+  ticker: string;
   side: 'Compra' | 'Venda';
   quantity: number;
   price: number;
 }
 
 export interface OrderResponse {
-  success: boolean;
+  status: string;
   message: string;
   orderId?: string;
-  errorReason?: string;
+  rejectReason?: string;
 }

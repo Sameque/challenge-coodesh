@@ -8,16 +8,16 @@
     <form [formGroup]="orderForm" (ngSubmit)="submitOrder()" class="order-form">
 
       <div class="form-group">
-        <label for="symbol">Ativo</label>
+        <label for="ticker">Ativo</label>
         <div class="select-wrapper">
-          <select id="symbol" formControlName="symbol">
+          <select id="ticker" formControlName="ticker">
             <option value="" disabled>Selecione o ativo</option>
-            @for (asset of assets(); track asset.symbol) {
-              <option [value]="asset.symbol">{{ asset.symbol }} ({{ asset.name }})</option>
+            @for (asset of assets(); track asset.ticker) {
+              <option [value]="asset.ticker">{{ asset.ticker }} ({{ asset.name }})</option>
             }
           </select>
         </div>
-        @if (orderForm.get('symbol')?.touched && orderForm.get('symbol')?.invalid) {
+        @if (orderForm.get('ticker')?.touched && orderForm.get('ticker')?.invalid) {
           <span class="error-text">O símbolo é obrigatório.</span>
         }
       </div>
@@ -26,11 +26,11 @@
         <label>Lado da Operação</label>
         <div class="toggle-group">
           <label class="toggle-option">
-            <input type="radio" formControlName="side" value="Compra">
+            <input type="radio" formControlName="side" value="BUY">
             <span class="toggle-content compra">Compra</span>
           </label>
           <label class="toggle-option">
-            <input type="radio" formControlName="side" value="Venda">
+            <input type="radio" formControlName="side" value="SELL">
             <span class="toggle-content venda">Venda</span>
           </label>
         </div>
