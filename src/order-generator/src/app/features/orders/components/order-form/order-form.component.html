@@ -1,0 +1,81 @@
+<div class="form-container">
+  <div class="form-card">
+    <header class="form-header">
+      <h1>Nova Ordem</h1>
+      <p>Preencha os detalhes para enviar sua operação</p>
+    </header>
+
+    <form [formGroup]="orderForm" (ngSubmit)="submitOrder()" class="order-form">
+
+      <div class="form-group">
+        <label for="symbol">Ativo</label>
+        <div class="select-wrapper">
+          <select id="symbol" formControlName="symbol">
+            <option value="" disabled>Selecione o ativo</option>
+            @for (asset of assets(); track asset.symbol) {
+              <option [value]="asset.symbol">{{ asset.symbol }} ({{ asset.name }})</option>
+            }
+          </select>
+        </div>
+        @if (orderForm.get('symbol')?.touched && orderForm.get('symbol')?.invalid) {
+          <span class="error-text">O símbolo é obrigatório.</span>
+        }
+      </div>
+
+      <div class="form-group">
+        <label>Lado da Operação</label>
+        <div class="toggle-group">
+          <label class="toggle-option">
+            <input type="radio" formControlName="side" value="Compra">
+            <span class="toggle-content compra">Compra</span>
+          </label>
+          <label class="toggle-option">
+            <input type="radio" formControlName="side" value="Venda">
+            <span class="toggle-content venda">Venda</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="quantity">Quantidade</label>
+          <input type="number" id="quantity" formControlName="quantity" placeholder="Ex: 100">
+          @if (orderForm.get('quantity')?.touched && orderForm.get('quantity')?.invalid) {
+            <span class="error-text">
+              {{ orderForm.get('quantity')?.hasError('required') ? 'Obrigatório' :
+                 orderForm.get('quantity')?.hasError('min') ? 'Mínimo 1' :
+                 orderForm.get('quantity')?.hasError('max') ? 'Máximo 99.999' : 'Inválido' }}
+            </span>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="price">Preço (R$)</label>
+          <input type="number" id="price" formControlName="price" step="0.01" placeholder="0.00">
+          @if (orderForm.get('price')?.touched && orderForm.get('price')?.invalid) {
+            <span class="error-text">
+              {{ orderForm.get('price')?.hasError('required') ? 'Obrigatório' :
+                 orderForm.get('price')?.hasError('min') ? 'Mínimo 0.01' :
+                 orderForm.get('price')?.hasError('max') ? 'Máximo 999.99' : 'Múltiplo de 0.01' }}
+            </span>
+          }
+        </div>
+      </div>
+
+      <button type="submit" class="submit-button" [disabled]="isLoading()">
+        @if (isLoading()) {
+          <span class="loader"></span>
+          Enviando...
+        } @else {
+          Enviar Ordem
+        }
+      </button>
+    </form>
+
+    @if (feedbackMessage()) {
+      <div class="feedback-message" [ngClass]="feedbackMessage()?.type">
+        {{ feedbackMessage()?.text }}
+      </div>
+    }
+  </div>
+</div>
