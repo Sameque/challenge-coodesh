@@ -2,14 +2,14 @@
 
 A distributed system designed for order generation and accumulation, simulating a trading environment where orders are sent from a generator to an exchange using the FIX 4.4 protocol.
 
-## 🚀 Technologies Used
+## Technologies Used
 
 - **Frontend**: Angular (v21), TypeScript, Node.js
 - **Backend (API & Exchange)**: .NET 10, C#
 - **Database**: SQLite (via Entity Framework Core)
 - **Messaging Protocol**: FIX 4.4 (implemented with QuickFIX/n)
 
-## 🛠️ Installation and Setup
+## Installation and Setup
 
 ### Prerequisites
 - [.NET 10 SDK](https://dotnet.microsoft.com/download)
@@ -43,7 +43,7 @@ npm start
 ```
 The application will be available at `http://localhost:4200`.
 
-## 📌 Important Notes
+## Important Notes
 - **FIX Protocol**: Ensure that the `initiator.cfg` and `acceptor.cfg` (or equivalent) are correctly configured for the communication between the Generator and the Accumulator.
 - **Database**: The system uses SQLite for persistence, creating `orders.db` files locally in the API directories.
 
