@@ -1,7 +1,5 @@
 using Microsoft.Extensions.Caching.Distributed;
 using OrderAccumulator.Domain.Interfaces;
-using System.Threading.Tasks;
-using System;
 
 namespace OrderAccumulator.Infrastructure.Persistence;
 
@@ -29,10 +27,6 @@ public class ExposureRepository : IExposureRepository
     public async Task UpdateExposureAsync(string symbol, decimal delta)
     {
         string key = $"{CacheKeyPrefix}{symbol.ToUpper()}";
-
-        // In a professional distributed system, we would use a Lua script via IConnectionMultiplexer
-        // to ensure atomicity. For this implementation, we use a read-modify-write pattern
-        // consistent with the IDistributedCache abstraction.
 
         decimal currentExposure = await GetExposureAsync(symbol);
         decimal newValue = currentExposure + delta;
