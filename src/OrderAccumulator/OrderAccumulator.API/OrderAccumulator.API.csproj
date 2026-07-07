@@ -9,4 +9,8 @@
     <ProjectReference Include="..\OrderAccumulator.Application\OrderAccumulator.Application.csproj" />
     <ProjectReference Include="..\OrderAccumulator.Infrastructure\OrderAccumulator.Infrastructure.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Include="config\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>
