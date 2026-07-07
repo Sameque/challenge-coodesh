@@ -18,6 +18,7 @@ services:
       dockerfile: src/OrderAccumulator/OrderAccumulator.API/Dockerfile
     ports:
       - "64164:8080"
+      - "5002:5002"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
@@ -27,8 +28,8 @@ services:
 
   order-generator-ui:
     build:
-      context: .
-      dockerfile: src/order-generator/Dockerfile
+      context: src/order-generator
+      dockerfile: Dockerfile
     ports:
       - "4200:80"
     depends_on:
