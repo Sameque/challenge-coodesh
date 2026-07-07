@@ -8,6 +8,9 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Host=db-ordergenerator;Port=5432;Database=orderdb;Username=postgres;Password=postgres
+    depends_on:
+      - db-ordergenerator
 
   order-accumulator-api:
     build:
@@ -18,6 +21,9 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Host=db-orderaccumulator;Port=5432;Database=orderaccumulator;Username=postgres;Password=postgres
+    depends_on:
+      - db-orderaccumulator
 
   order-generator-ui:
     build:
@@ -28,3 +34,29 @@ services:
     depends_on:
       - order-generator-api
       - order-accumulator-api
+
+  db-ordergenerator:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: orderdb
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata_ordergenerator:/var/lib/postgresql/data
+
+  db-orderaccumulator:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: orderaccumulator
+    ports:
+      - "5434:5432"
+    volumes:
+      - pgdata_orderaccumulator:/var/lib/postgresql/data
+
+volumes:
+  pgdata_ordergenerator:
+  pgdata_orderaccumulator:
