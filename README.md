@@ -47,5 +47,37 @@ The application will be available at `http://localhost:4200`.
 - **FIX Protocol**: Ensure that the `initiator.cfg` and `acceptor.cfg` (or equivalent) are correctly configured for the communication between the Generator and the Accumulator.
 - **Database**: The system uses SQLite for persistence, creating `orders.db` files locally in the API directories.
 
+## Docker
+
+Uma composição Docker está disponível para subir as APIs, bancos PostgreSQL e o Redis de cache.
+
+- Para subir tudo (build das imagens e execução):
+
+```bash
+docker compose up --build
+```
+
+- Serviços expostos por padrão:
+	- `order-generator-api` → `http://localhost:5159`
+	- `order-accumulator-api` → `http://localhost:64164`
+	- `order-generator-ui` → `http://localhost:4200`
+	- PostgreSQL (db-ordergenerator) → host `localhost:5433` (mapeado para 5432 no container)
+	- PostgreSQL (db-orderaccumulator) → host `localhost:5434` (mapeado para 5432 no container)
+	- Redis → host `localhost:6379`
+
+- Notas importantes:
+	- As APIs dependem de PostgreSQL e Redis; o `docker-compose.yml` inclui healthchecks e `pg_isready` para aguardar os bancos.
+	- Se precisar acompanhar os logs durante a inicialização:
+
+```bash
+docker compose logs -f order-accumulator-api db-orderaccumulator redis
+```
+
+	- Para remover volumes e dados persistidos (atenção: apaga dados):
+
+```bash
+docker compose down -v
+```
+
 ---
 > This is a challenge by [Coodesh](https://coodesh.com/)
