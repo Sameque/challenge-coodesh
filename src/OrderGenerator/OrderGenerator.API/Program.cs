@@ -1,18 +1,14 @@
 using Microsoft.EntityFrameworkCore;
+using OpenTelemetry.Shared;
 using OrderGenerator.API.Fix;
 using OrderGenerator.API.Middleware;
-using OpenTelemetry.Shared;
 using OrderGenerator.Application.UseCases;
-using OrderGenerator.Infrastructure.Configuration;
 using OrderGenerator.Infrastructure.Exchange;
 using OrderGenerator.Infrastructure.Extensions;
 using OrderGenerator.Infrastructure.Persistence;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
-
-builder.Services.Configure<ExchangeSettings>(
-    builder.Configuration.GetSection(ExchangeSettings.SectionName));
 
 builder.Services.AddInfrastructure(builder.Configuration, migrationsAssembly: typeof(Program).Assembly.GetName().Name);
 

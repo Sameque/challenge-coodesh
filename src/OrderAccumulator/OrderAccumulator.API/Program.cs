@@ -30,11 +30,11 @@ builder.Services.AddHostedService<FixAcceptorHostedService>();
 
 var app = builder.Build();
 
-    using (var scope = app.Services.CreateScope())
-    {
-        var initializer = scope.ServiceProvider.GetRequiredService<ExposureInitializer>();
-        await initializer.InitializeAsync();
-    }
+using (var scope = app.Services.CreateScope())
+{
+    var initializer = scope.ServiceProvider.GetRequiredService<ExposureInitializer>();
+    await initializer.InitializeAsync();
+}
 
 app.MapPrometheusScrapingEndpoint();
 

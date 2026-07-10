@@ -39,7 +39,7 @@ public sealed class GlobalExceptionMiddleware
         {
             ArgumentException => (HttpStatusCode.BadRequest, "Invalid argument"),
             InvalidOperationException => (HttpStatusCode.UnprocessableEntity, "Business rule violation"),
-            OperationCanceledException => (HttpStatusCode.ServiceUnavailable, "Request cancelled"),
+            OperationCanceledException => (HttpStatusCode.RequestTimeout, "Request cancelled"),
             _ => (HttpStatusCode.InternalServerError, "An unexpected error occurred")
         };
 
