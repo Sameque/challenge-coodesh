@@ -28,11 +28,11 @@ public class ProcessOrderUseCase
         if (string.IsNullOrWhiteSpace(request.Symbol) || request.Quantity <= 0 || request.Price <= 0)
             return new OrderResponse(false, "Invalid order parameters.");
 
-        if (request.Price > 1000)
-            return new OrderResponse(false, $"Price exceeds the maximum allowed value of 1000.");
+        if (request.Price > OrderLimits.MaxPrice)
+            return new OrderResponse(false, $"Price exceeds the maximum allowed value of {OrderLimits.MaxPrice}.");
 
-        if (request.Quantity > 100000)
-            return new OrderResponse(false, $"Quantity exceeds the maximum allowed value of 100000.");
+        if (request.Quantity > OrderLimits.MaxQuantity)
+            return new OrderResponse(false, $"Quantity exceeds the maximum allowed value of {OrderLimits.MaxQuantity}.");
 
         var side = request.Side.ToLower() == "buy" ? OrderSide.Buy : OrderSide.Sell;
 
@@ -40,7 +40,7 @@ public class ProcessOrderUseCase
         var delta = ExposureCalculator.CalculateDelta(side, request.Price, request.Quantity);
         var currentExposure = await _exposureRepository.GetExposureAsync(symbol, cancellationToken);
 
-        if (currentExposure + delta > 100000000.00m)
+        if (currentExposure + delta > OrderLimits.MaxExposure)
         {
             return new OrderResponse(false, $"Order rejected: Total exposure for {symbol} would exceed the maximum allowed limit of 100,000,000.00.");
         }
