@@ -3,28 +3,30 @@ using OrderAccumulator.Application.UseCases;
 using OrderAccumulator.Domain.Interfaces;
 using OrderAccumulator.Infrastructure.Persistence;
 using OrderAccumulator.API.Fix;
-using OrderAccumulator.API.Observability;
-using QuickFix;
-using QuickFix.Store;
-using QuickFix.Logger;
+using OpenTelemetry.Shared;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.AddOpenTelemetry();
+builder.AddSharedOpenTelemetry();
 
 builder.Services.AddDbContext<OrderAccumulatorDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"),
+        b => b.MigrationsAssembly(typeof(Program).Assembly.GetName().Name)));
 
+var redisConnectionString = builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379";
+builder.Services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConnectionString));
 builder.Services.AddStackExchangeRedisCache(options =>
 {
-    options.Configuration = builder.Configuration.GetConnectionString("Redis");
+    options.Configuration = redisConnectionString;
 });
-builder.Services.AddSingleton<IExposureRepository, ExposureRepository>();
+builder.Services.AddScoped<IExposureRepository, ExposureRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<ProcessOrderUseCase>();
 builder.Services.AddScoped<ExposureInitializer>();
 
 builder.Services.AddSingleton<FixAcceptor>();
+builder.Services.AddHostedService<FixAcceptorHostedService>();
 
 var app = builder.Build();
 
@@ -33,19 +35,6 @@ var app = builder.Build();
         var initializer = scope.ServiceProvider.GetRequiredService<ExposureInitializer>();
         await initializer.InitializeAsync();
     }
-
-var fixAcceptor = app.Services.GetRequiredService<FixAcceptor>();
-var settings = new SessionSettings("config/client.cfg");
-var storeFactory = new FileStoreFactory(settings);
-var logFactory = new ScreenLogFactory(settings);
-
-var initiator = new ThreadedSocketAcceptor(
-                        fixAcceptor, 
-                        storeFactory, 
-                        settings, 
-                        logFactory);
-
-initiator.Start();
 
 app.MapPrometheusScrapingEndpoint();
 

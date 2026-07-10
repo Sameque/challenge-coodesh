@@ -1,36 +1,32 @@
-using Microsoft.Extensions.Caching.Distributed;
 using OrderAccumulator.Domain.Interfaces;
+using StackExchange.Redis;
 
 namespace OrderAccumulator.Infrastructure.Persistence;
 
 public class ExposureRepository : IExposureRepository
 {
-    private readonly IDistributedCache _cache;
+    private readonly IDatabase _redis;
     private const string CacheKeyPrefix = "exposure_";
 
-    public ExposureRepository(IDistributedCache cache)
+    public ExposureRepository(IConnectionMultiplexer connectionMultiplexer)
     {
-        _cache = cache;
+        _redis = connectionMultiplexer.GetDatabase();
     }
 
-    public async Task<decimal> GetExposureAsync(string symbol)
+    public async Task<decimal> GetExposureAsync(string symbol, CancellationToken cancellationToken = default)
     {
         string key = $"{CacheKeyPrefix}{symbol.ToUpper()}";
-        var value = await _cache.GetStringAsync(key);
+        var value = await _redis.StringGetAsync(key);
 
-        if (decimal.TryParse(value, out decimal exposure))
+        if (value.HasValue && decimal.TryParse((string?)value, out decimal exposure))
             return exposure;
 
         return 0m;
     }
 
-    public async Task UpdateExposureAsync(string symbol, decimal delta)
+    public async Task UpdateExposureAsync(string symbol, decimal delta, CancellationToken cancellationToken = default)
     {
         string key = $"{CacheKeyPrefix}{symbol.ToUpper()}";
-
-        decimal currentExposure = await GetExposureAsync(symbol);
-        decimal newValue = currentExposure + delta;
-
-        await _cache.SetStringAsync(key, newValue.ToString());
+        await _redis.StringIncrementAsync(key, (double)delta);
     }
 }
