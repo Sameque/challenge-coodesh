@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using OrderAccumulator.Domain.Enums;
 using OrderAccumulator.Domain.Interfaces;
+using OrderAccumulator.Domain.Services;
 
 namespace OrderAccumulator.Infrastructure.Persistence;
 
@@ -17,16 +18,17 @@ public class ExposureInitializer
 
     public async Task InitializeAsync()
     {
-        _db.Database.EnsureCreated();
+        await _db.Database.MigrateAsync();
 
-        var orders = await _db.Orders.ToListAsync();
+        var orders = await _db.Orders
+            .Where(o => o.Status == OrderStatus.Accepted)
+            .ToListAsync();
+
         var exposures = orders.GroupBy(o => o.Symbol)
             .Select(g => new
             {
                 Symbol = g.Key,
-                TotalExposure = g.Sum(o => o.Side == OrderSide.Buy
-                    ? o.Price * o.Quantity
-                    : -o.Price * o.Quantity)
+                TotalExposure = ExposureCalculator.CalculateExposure(g)
             });
 
         foreach (var exp in exposures)

@@ -1,7 +1,9 @@
+using Microsoft.Extensions.Logging;
 using OrderAccumulator.Application.DTOs;
 using OrderAccumulator.Domain.Entities;
 using OrderAccumulator.Domain.Enums;
 using OrderAccumulator.Domain.Interfaces;
+using OrderAccumulator.Domain.Services;
 
 namespace OrderAccumulator.Application.UseCases;
 
@@ -9,14 +11,19 @@ public class ProcessOrderUseCase
 {
     private readonly IOrderRepository _repository;
     private readonly IExposureRepository _exposureRepository;
+    private readonly ILogger<ProcessOrderUseCase> _logger;
 
-    public ProcessOrderUseCase(IOrderRepository repository, IExposureRepository exposureRepository)
+    public ProcessOrderUseCase(
+        IOrderRepository repository,
+        IExposureRepository exposureRepository,
+        ILogger<ProcessOrderUseCase> logger)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         _exposureRepository = exposureRepository ?? throw new ArgumentNullException(nameof(exposureRepository));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task<OrderResponse> ExecuteAsync(OrderRequest request)
+    public async Task<OrderResponse> ExecuteAsync(OrderRequest request, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(request.Symbol) || request.Quantity <= 0 || request.Price <= 0)
             return new OrderResponse(false, "Invalid order parameters.");
@@ -25,33 +32,32 @@ public class ProcessOrderUseCase
             return new OrderResponse(false, $"Price exceeds the maximum allowed value of 1000.");
 
         if (request.Quantity > 100000)
-            return new OrderResponse(false, $"Price exceeds the maximum allowed value of 1000.");
+            return new OrderResponse(false, $"Quantity exceeds the maximum allowed value of 100000.");
 
         var side = request.Side.ToLower() == "buy" ? OrderSide.Buy : OrderSide.Sell;
 
         var symbol = request.Symbol.ToUpper();
-        var orderValue = request.Price * request.Quantity;
-        var delta = side == OrderSide.Buy ? orderValue : -orderValue;
-        var currentExposure = await _exposureRepository.GetExposureAsync(symbol);
+        var delta = ExposureCalculator.CalculateDelta(side, request.Price, request.Quantity);
+        var currentExposure = await _exposureRepository.GetExposureAsync(symbol, cancellationToken);
 
         if (currentExposure + delta > 100000000.00m)
         {
             return new OrderResponse(false, $"Order rejected: Total exposure for {symbol} would exceed the maximum allowed limit of 100,000,000.00.");
         }
 
-        var order = new Order
-        {
-            Id = Guid.NewGuid(),
-            Symbol = symbol,
-            Quantity = request.Quantity,
-            Price = request.Price,
-            Side = side,
-            Status = OrderStatus.Accepted,
-            Timestamp = DateTime.UtcNow
-        };
+        var order = Order.Create(symbol, request.Quantity, request.Price, side);
 
-        await _repository.AddOrderAsync(order);
-        await _exposureRepository.UpdateExposureAsync(symbol, delta);
+        await _repository.AddOrderAsync(order, cancellationToken);
+
+        try
+        {
+            await _exposureRepository.UpdateExposureAsync(symbol, delta, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to update exposure for {Symbol}. Order {OrderId} saved but exposure may be stale.",
+                symbol, order.Id);
+        }
 
         return new OrderResponse(true, "Order accepted and processed.");
     }
