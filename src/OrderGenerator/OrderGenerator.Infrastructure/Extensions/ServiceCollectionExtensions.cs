@@ -12,7 +12,8 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddInfrastructure(
         this IServiceCollection services,
         IConfiguration configuration,
-        Action<ExchangeSettings>? configureExchangeSettings = null)
+        Action<ExchangeSettings>? configureExchangeSettings = null,
+        string? migrationsAssembly = null)
     {
         if (configureExchangeSettings is not null)
             services.Configure(configureExchangeSettings);
@@ -21,7 +22,11 @@ public static class ServiceCollectionExtensions
             ?? "Host=localhost;Port=5432;Database=orderdb;Username=postgres;Password=postgres";
 
         services.AddDbContext<OrderDbContext>(options =>
-            options.UseNpgsql(connectionString));
+            options.UseNpgsql(connectionString, b =>
+            {
+                if (migrationsAssembly is not null)
+                    b.MigrationsAssembly(migrationsAssembly);
+            }));
 
         services.AddScoped<IOrderRepository, OrderRepository>();
 

@@ -1,14 +1,12 @@
+using Microsoft.EntityFrameworkCore;
+using OrderGenerator.API.Fix;
 using OrderGenerator.API.Middleware;
-using OrderGenerator.API.Observability;
+using OpenTelemetry.Shared;
 using OrderGenerator.Application.UseCases;
 using OrderGenerator.Infrastructure.Configuration;
 using OrderGenerator.Infrastructure.Exchange;
 using OrderGenerator.Infrastructure.Extensions;
 using OrderGenerator.Infrastructure.Persistence;
-using QuickFix;
-using QuickFix.Logger;
-using QuickFix.Store;
-using QuickFix.Transport;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,9 +14,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<ExchangeSettings>(
     builder.Configuration.GetSection(ExchangeSettings.SectionName));
 
-builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddInfrastructure(builder.Configuration, migrationsAssembly: typeof(Program).Assembly.GetName().Name);
 
-builder.AddOpenTelemetry();
+builder.AddSharedOpenTelemetry();
 
 builder.Services.AddCors(options =>
 {
@@ -57,30 +55,15 @@ builder.Services.AddSwaggerGen(options =>
         options.IncludeXmlComments(xmlPath);
 });
 
-var settings = new SessionSettings("initiator.cfg");
-var application = new FixApplication();
-var storeFactory = new FileStoreFactory(settings);
-var logFactory = new FileLogFactory(settings);
-
-var initiator = new SocketInitiator(
-    application,
-    storeFactory,
-    settings,
-    logFactory);
-
-initiator.Start();
-
-builder.Services.AddSingleton((a) =>
-{
-    return application;
-});
+builder.Services.AddSingleton<FixApplication>();
+builder.Services.AddHostedService<FixHostedService>();
 
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<OrderDbContext>();
-    dbContext.Database.EnsureCreated();
+    await dbContext.Database.MigrateAsync();
 }
 
 app.UseMiddleware<GlobalExceptionMiddleware>();

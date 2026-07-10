@@ -13,7 +13,7 @@ public sealed class OrderRepository : IOrderRepository
         _context = context;
     }
 
-    public async Task<Order> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<Order?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await _context.Orders.FindAsync(new object[] { id }, cancellationToken);
     }
