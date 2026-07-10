@@ -6,8 +6,13 @@ export interface Order {
 }
 
 export interface OrderResponse {
+  orderId: string;
+  symbol: string;
+  side: string;
+  quantity: number;
+  price: number;
   status: string;
-  message: string;
-  orderId?: string;
+  brokerOrderId?: string;
   rejectReason?: string;
+  createdAt: string;
 }

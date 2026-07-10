@@ -52,7 +52,10 @@ export class OrderFormComponent implements OnInit, OnDestroy {
   private loadAssets(): void {
     this.assetService.getAssets()
       .pipe(takeUntil(this.destroy$))
-      .subscribe(data => this.assets.set(data));
+      .subscribe({
+        next: data => this.assets.set(data),
+        error: err => this.feedbackMessage.set({ text: 'Erro ao carregar ativos', type: 'error' })
+      });
   }
 
   ngOnDestroy(): void {
