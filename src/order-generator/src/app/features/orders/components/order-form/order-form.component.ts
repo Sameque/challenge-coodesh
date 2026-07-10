@@ -1,6 +1,13 @@
 import { Component, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+  AbstractControl,
+  ValidationErrors,
+} from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 import { OrderService } from '../../../../core/services/order.service';
 import { AssetService } from '../../../../core/services/asset.service';
@@ -12,7 +19,7 @@ import { Asset } from '../../../../core/models/asset.model';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './order-form.component.html',
-  styleUrls: ['./order-form.component.css']
+  styleUrls: ['./order-form.component.css'],
 })
 export class OrderFormComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
@@ -25,23 +32,29 @@ export class OrderFormComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private orderService: OrderService,
-    private assetService: AssetService
+    private assetService: AssetService,
   ) {
     this.orderForm = this.fb.group({
       ticker: ['', [Validators.required]],
       side: ['BUY', [Validators.required]],
-      quantity: [null, [
-        Validators.required,
-        Validators.min(1),
-        Validators.max(99999),
-        Validators.pattern('^[0-9]*$')
-      ]],
-      price: [null, [
-        Validators.required,
-        Validators.min(0.01),
-        Validators.max(999.99),
-        this.priceStepValidator(0.01)
-      ]]
+      quantity: [
+        null,
+        [
+          Validators.required,
+          Validators.min(1),
+          Validators.max(99999),
+          Validators.pattern('^[0-9]*$'),
+        ],
+      ],
+      price: [
+        null,
+        [
+          Validators.required,
+          Validators.min(0.01),
+          Validators.max(999.99),
+          this.priceStepValidator(0.01),
+        ],
+      ],
     });
   }
 
@@ -50,11 +63,13 @@ export class OrderFormComponent implements OnInit, OnDestroy {
   }
 
   private loadAssets(): void {
-    this.assetService.getAssets()
+    this.assetService
+      .getAssets()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: data => this.assets.set(data),
-        error: err => this.feedbackMessage.set({ text: 'Erro ao carregar ativos', type: 'error' })
+        next: (data) => this.assets.set(data),
+        error: (err) =>
+          this.feedbackMessage.set({ text: 'Erro ao carregar ativos', type: 'error' }),
       });
   }
 
@@ -93,7 +108,7 @@ export class OrderFormComponent implements OnInit, OnDestroy {
         } else {
           this.feedbackMessage.set({
             text: `Ordem Rejeitada: ${res.rejectReason || 'Erro desconhecido'}`,
-            type: 'error'
+            type: 'error',
           });
         }
       },
@@ -101,9 +116,9 @@ export class OrderFormComponent implements OnInit, OnDestroy {
         this.isLoading.set(false);
         this.feedbackMessage.set({
           text: `Erro na comunicação: ${err.message || 'Servidor indisponível'}`,
-          type: 'error'
+          type: 'error',
         });
-      }
+      },
     });
   }
 }

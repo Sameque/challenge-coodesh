@@ -5,7 +5,7 @@ import { Asset } from '../models/asset.model';
 import { environment } from '../../../environments/environment';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AssetService {
   private readonly apiUrl = `${environment.urlBase}/api/symbols`;

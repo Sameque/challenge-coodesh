@@ -3,13 +3,13 @@ import { catchError, throwError } from 'rxjs';
 
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   return next(req).pipe(
-    catchError(error => {
+    catchError((error) => {
       console.error('[HTTP Error]', {
         url: req.url,
         status: error.status,
-        message: error.message
+        message: error.message,
       });
       return throwError(() => error);
-    })
+    }),
   );
 };

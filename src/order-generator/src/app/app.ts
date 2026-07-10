@@ -5,7 +5,7 @@ import { OrderFormComponent } from './features/orders/components/order-form/orde
   selector: 'app-root',
   imports: [OrderFormComponent],
   templateUrl: './app.html',
-  styleUrl: './app.css'
+  styleUrl: './app.css',
 })
 export class App {
   protected readonly title = signal('order-generator');

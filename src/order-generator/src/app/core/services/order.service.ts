@@ -5,7 +5,7 @@ import { Order, OrderResponse } from '../models/order.model';
 import { environment } from '../../../environments/environment';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class OrderService {
   private readonly apiUrl = `${environment.urlBase}/api/order`;
