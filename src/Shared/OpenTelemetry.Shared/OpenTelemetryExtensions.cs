@@ -3,19 +3,14 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
-namespace OrderAccumulator.API.Observability;
+namespace OpenTelemetry.Shared;
 
-/// <summary>
-/// Wires OpenTelemetry traces and metrics for the OrderAccumulator service.
-/// Same shape as OrderGenerator: OTLP gRPC for traces, Prometheus pull
-/// endpoint for metrics.
-/// </summary>
-internal static class OpenTelemetryExtensions
+public static class OpenTelemetryExtensions
 {
-    public static WebApplicationBuilder AddOpenTelemetry(this WebApplicationBuilder builder)
+    public static WebApplicationBuilder AddSharedOpenTelemetry(this WebApplicationBuilder builder, string? serviceName = null)
     {
         var otelEndpoint = builder.Configuration["OpenTelemetry:Endpoint"] ?? "http://localhost:4317";
-        var serviceName = builder.Configuration["OpenTelemetry:ServiceName"] ?? "orderaccumulator.api";
+        serviceName ??= builder.Configuration["OpenTelemetry:ServiceName"] ?? "unknown";
 
         var resource = ResourceBuilder.CreateDefault()
             .AddService(serviceName: serviceName);
