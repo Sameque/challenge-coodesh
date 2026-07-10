@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using OrderGenerator.Application.UseCases;
 using OrderGenerator.Domain.DTOs;
+using OrderGenerator.Domain.Enums;
 
 namespace OrderGenerator.API.Controllers;
 
@@ -44,6 +45,9 @@ public sealed class OrderController : ControllerBase
 
         var response = await _placeOrderUseCase.ExecuteAsync(request, cancellationToken);
 
-        return CreatedAtAction(nameof(PlaceOrder), new { id = response.OrderId }, response);
+        if (response.Status == OrderStatus.Accepted)
+            return CreatedAtAction(nameof(PlaceOrder), new { id = response.OrderId }, response);
+
+        return Ok(response);
     }
 }
